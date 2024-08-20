@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Events\SendNotificationEvent;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\TypeResource;
 use App\Models\Category;
 use App\Models\Type;
+use App\Models\User;
+use Illuminate\Support\Facades\Event;
 
 class CategoryService
 {
@@ -16,6 +19,13 @@ class CategoryService
         $path = $request->file('image')->storeAs('categories', $image, 'files');
         $input['image'] = $path;
         Category::create($input);
+
+        $users = User::where('Role_id', 2)->get();
+        foreach ($users as $user) {
+            if (!empty($user->fcm_token)) {
+                Event::dispatch(new SendNotificationEvent('تم إضافة تصنيف جديد إلى التطبيق', $user));
+            }
+        }
         return response()->json(['message' => 'The Category is added Successfully'], 201);
     }
 
@@ -26,7 +36,7 @@ class CategoryService
         if (!count($category)) {
             return response()->json(['message' => 'not found'], 404);
         }
-        $categories= CategoryResource::collection($category);
+        $categories = CategoryResource::collection($category);
         return response()->json(['data' => $categories], 200);
     }
 
@@ -34,11 +44,11 @@ class CategoryService
     public function show($id)
     {
         $category = Category::find($id);
-        if(empty($category)){
-            return response()->json(['message' => 'not found'],404);
+        if (empty($category)) {
+            return response()->json(['message' => 'not found'], 404);
         }
-        $categories= new CategoryResource($category);
-        return response()->json(['data' => $categories],200);
+        $categories = new CategoryResource($category);
+        return response()->json(['data' => $categories], 200);
     }
 
 
@@ -48,7 +58,7 @@ class CategoryService
         if (!count($search)) {
             return response()->json(['message' => 'not found'], 404);
         }
-        $categories= CategoryResource::collection($search);
+        $categories = CategoryResource::collection($search);
         return response()->json(['data' => $categories], 200);
     }
 
@@ -74,7 +84,7 @@ class CategoryService
         if (!count($type)) {
             return response()->json(['message' => 'not found'], 404);
         }
-        $types= TypeResource::collection($type);
+        $types = TypeResource::collection($type);
         return response()->json(['data' => $types], 200);
     }
 }

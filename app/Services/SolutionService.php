@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Events\SendNotificationEvent;
+use App\Models\Complaint;
 use App\Models\Solution;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 
 class SolutionService
 {
@@ -13,6 +17,11 @@ class SolutionService
         $input = $request->all();
         $input['user_id'] = $id;
         Solution::create($input);
+        $complaint = Complaint::find($input['complaint_id']);
+        $user = User::find($complaint->user_id);
+            if (!empty($user->fcm_token)) {
+                Event::dispatch(new SendNotificationEvent('تم الرد على الشكوى', $user));
+            }
         return response()->json(['message' => 'The Solution is added Successfully'], 201);
     }
 

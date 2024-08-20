@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Events\SendNotificationEvent;
 use App\Models\Answer;
+use App\Models\Question;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 
 class AnswerService
 {
@@ -13,6 +17,11 @@ class AnswerService
         $input = $request->all();
         $input['user_id'] = $id;
         Answer::create($input);
+        $question = Question::find($input['question_id']);
+        $user = User::find($question->user_id);
+            if (!empty($user->fcm_token)) {
+                Event::dispatch(new SendNotificationEvent('تمت الإجابة على سؤالك', $user));
+            }
         return response()->json(['message' => 'The answer is added Successfully'], 201);
     }
 

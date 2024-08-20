@@ -43,7 +43,6 @@ class EventServiceProvider extends ServiceProvider
             SendNotificationListener::class,
         ],
 
-
     ];
 
     /**

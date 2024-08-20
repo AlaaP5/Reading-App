@@ -23,6 +23,12 @@ class BookService
         $input['content'] = $pathBook;
 
         Book::create($input);
+        $users = User::where('Role_id', 2)->get();
+        foreach ($users as $user) {
+            if (!empty($user->fcm_token)) {
+                Event::dispatch(new SendNotificationEvent('تم إضافة كتاب جديد إلى التطبيق', $user));
+            }
+        }
         return response()->json(['message' => 'The book is added Successfully'], 201);
     }
 

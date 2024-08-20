@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Events\SendNotificationEvent;
 use App\Http\Resources\AuthorResource;
 use App\Models\Author;
 use App\Models\Book;
+use App\Models\User;
+use Illuminate\Support\Facades\Event;
 
 class AuthorService
 {
@@ -17,6 +20,13 @@ class AuthorService
         $input['image'] = $path;
 
         Author::create($input);
+
+        $users = User::where('Role_id', 2)->get();
+        foreach ($users as $user) {
+            if (!empty($user->fcm_token)) {
+                Event::dispatch(new SendNotificationEvent('تم إضافة كاتب جديد إلى التطبيق', $user));
+            }
+        }
         return response()->json(['message' => 'The author is added Successfully'], 201);
     }
 
